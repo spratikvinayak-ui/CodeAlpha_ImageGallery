@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lumina — Image Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0c0c;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --text: #e8e4dc;
+    --muted: #6b6560;
+    --accent: #c9a96e;
+    --accent-dim: #8a6f42;
+    --white: #f5f1eb;
+    --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2rem 4rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(12, 12, 12, 0.92);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    color: var(--white);
+  }
+  .logo em { color: var(--accent); font-style: italic; }
+
+  .header-meta {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 5rem 4rem 3rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 300;
+    line-height: 1;
+    color: var(--white);
+  }
+
+  .hero-title span {
+    display: block;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 0.55em;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3em;
+  }
+
+  .hero-count {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .hero-count strong {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  /* ── FILTERS ── */
+  .filters-bar {
+    padding: 1.5rem 4rem;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .filters-bar::-webkit-scrollbar { display: none; }
+
+  .filter-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-right: 2rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .filter-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0.5rem 1.5rem;
+    border-right: 1px solid var(--border);
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .filter-btn:first-of-type { border-left: 1px solid var(--border); }
+
+  .filter-btn:hover { color: var(--text); background: var(--surface); }
+
+  .filter-btn.active {
+    color: var(--accent);
+    background: rgba(201, 169, 110, 0.08);
+  }
+
+  /* ── CSS FILTERS TOOLBAR ── */
+  .fx-bar {
+    padding: 1rem 4rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .fx-bar::-webkit-scrollbar { display: none; }
+
+  .fx-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .fx-btn {
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0.35rem 1rem;
+    border-radius: 0;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .fx-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .fx-btn.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(201, 169, 110, 0.08);
+  }
+
+  /* ── GALLERY GRID ── */
+  .gallery-wrap {
+    padding: 3rem 4rem;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5px;
+  }
+
+  /* Masonry-like spans */
+  .gallery-item:nth-child(5n+1) { grid-row: span 2; }
+  .gallery-item:nth-child(7n+3) { grid-column: span 1; grid-row: span 1; }
+
+  .gallery-item {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 1;
+    background: var(--surface);
+  }
+
+  .gallery-item.tall { aspect-ratio: 2/3; }
+
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--transition), filter var(--transition);
+  }
+
+  /* CSS Image Filters */
+  .fx-none img { filter: none; }
+  .fx-mono img { filter: grayscale(1) contrast(1.1); }
+  .fx-warm img { filter: sepia(0.4) saturate(1.3) brightness(1.05); }
+  .fx-cool img { filter: hue-rotate(180deg) saturate(0.8) brightness(0.95); }
+  .fx-fade img { filter: saturate(0.3) brightness(1.1) contrast(0.9); }
+  .fx-vivid img { filter: saturate(1.8) contrast(1.1); }
+  .fx-noir img { filter: grayscale(1) brightness(0.85) contrast(1.3); }
+  .fx-mist img { filter: brightness(1.1) saturate(0.6) contrast(0.85) hue-rotate(10deg); }
+
+  .gallery-item:hover img { transform: scale(1.06); }
+
+  .gallery-item-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity var(--transition);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.25rem;
+  }
+
+  .gallery-item:hover .gallery-item-overlay { opacity: 1; }
+
+  .gallery-item-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--white);
+    letter-spacing: 0.05em;
+  }
+
+  .gallery-item-cat {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+  }
+
+  .gallery-item-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+
+  .gallery-item:hover .gallery-item-icon { opacity: 1; }
+
+  .gallery-item-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Hide filtered items */
+  .gallery-item.hidden {
+    display: none;
+  }
+
+  /* Fade in animation */
+  .gallery-item {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LIGHTBOX ── */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .lightbox.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .lb-inner {
+    position: relative;
+    max-width: min(90vw, 1100px);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lb-img-wrap {
+    position: relative;
+    overflow: hidden;
+    max-height: 80vh;
+  }
+
+  .lb-img-wrap img {
+    max-width: 90vw;
+    max-height: 78vh;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter var(--transition);
+  }
+
+  .lb-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0 0;
+    width: 100%;
+    min-width: min(90vw, 700px);
+  }
+
+  .lb-info .lb-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--white);
+  }
+
+  .lb-info .lb-sub {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  .lb-counter {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  .lb-counter span { color: var(--accent); }
+
+  /* Nav buttons */
+  .lb-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .lb-nav:hover { border-color: var(--accent); background: rgba(201, 169, 110, 0.08); }
+
+  .lb-nav svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--text);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .lb-prev { left: 2rem; }
+  .lb-next { right: 2rem; }
+
+  .lb-close {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .lb-close:hover { border-color: var(--text); }
+
+  .lb-close svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Thumbnails strip */
+  .lb-thumbs {
+    display: flex;
+    gap: 4px;
+    margin-top: 0.75rem;
+    overflow-x: auto;
+    max-width: min(90vw, 800px);
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .lb-thumbs::-webkit-scrollbar { display: none; }
+
+  .lb-thumb {
+    width: 52px;
+    height: 52px;
+    object-fit: cover;
+    cursor: pointer;
+    opacity: 0.35;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+  }
+
+  .lb-thumb.active {
+    opacity: 1;
+    border-color: var(--accent);
+  }
+
+  .lb-thumb:hover { opacity: 0.7; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 3rem 4rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+  }
+
+  .footer-meta {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    header { padding: 1.5rem 2rem; }
+    .hero { padding: 3rem 2rem 2rem; flex-direction: column; align-items: flex-start; }
+    .filters-bar, .fx-bar { padding: 1rem 2rem; }
+    .gallery-wrap { padding: 2rem 2rem; }
+    .gallery { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1px; }
+    footer { padding: 2rem; flex-direction: column; gap: 1rem; text-align: center; }
+    .lb-prev { left: 0.75rem; }
+    .lb-next { right: 0.75rem; }
+    .lb-close { top: 1rem; right: 1rem; }
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem 1.25rem; }
+    .logo { font-size: 1.4rem; }
+    .hero { padding: 2rem 1.25rem 1.5rem; }
+    .filters-bar, .fx-bar { padding: 0.75rem 1.25rem; }
+    .gallery-wrap { padding: 1.5rem 1.25rem; }
+    .gallery { grid-template-columns: repeat(2, 1fr); gap: 1px; }
+    .gallery-item:nth-child(5n+1) { grid-row: span 1; }
+    .lb-nav { width: 40px; height: 40px; }
+    .lb-prev { left: 0.5rem; }
+    .lb-next { right: 0.5rem; }
+    .lb-thumbs { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">L<em>u</em>mina</div>
+  <div class="header-meta">Curated Photography</div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1 class="hero-title">
+    <span>The Collection</span>
+    Visual Stories
+  </h1>
+  <div class="hero-count">
+    <strong id="visible-count">24</strong>
+    images in view
+  </div>
+</div>
+
+<!-- CATEGORY FILTERS -->
+<div class="filters-bar">
+  <div class="filter-label">Category ↗</div>
+  <button class="filter-btn active" data-cat="all">All</button>
+  <button class="filter-btn" data-cat="architecture">Architecture</button>
+  <button class="filter-btn" data-cat="nature">Nature</button>
+  <button class="filter-btn" data-cat="portrait">Portrait</button>
+  <button class="filter-btn" data-cat="abstract">Abstract</button>
+  <button class="filter-btn" data-cat="street">Street</button>
+</div>
+
+<!-- CSS IMAGE FILTERS -->
+<div class="fx-bar">
+  <div class="fx-label">Filter ↗</div>
+  <button class="fx-btn active" data-fx="fx-none">Original</button>
+  <button class="fx-btn" data-fx="fx-mono">Mono</button>
+  <button class="fx-btn" data-fx="fx-warm">Warm</button>
+  <button class="fx-btn" data-fx="fx-cool">Cool</button>
+  <button class="fx-btn" data-fx="fx-fade">Fade</button>
+  <button class="fx-btn" data-fx="fx-vivid">Vivid</button>
+  <button class="fx-btn" data-fx="fx-noir">Noir</button>
+  <button class="fx-btn" data-fx="fx-mist">Mist</button>
+</div>
+
+<!-- GALLERY -->
+<div class="gallery-wrap">
+  <div class="gallery" id="gallery">
+    <!-- Items injected by JS -->
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="lb-close" id="lb-close" aria-label="Close">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Previous image">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button class="lb-nav lb-next" id="lb-next" aria-label="Next image">
+    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+  <div class="lb-inner">
+    <div class="lb-img-wrap">
+      <img id="lb-img" src="" alt="" />
+    </div>
+    <div class="lb-meta">
+      <div class="lb-info">
+        <div class="lb-title" id="lb-title"></div>
+        <div class="lb-sub" id="lb-sub"></div>
+      </div>
+      <div class="lb-counter"><span id="lb-cur">1</span> / <span id="lb-total">24</span></div>
+    </div>
+    <div class="lb-thumbs" id="lb-thumbs"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Lumina</div>
+  <div class="footer-meta">© 2026 · All images via Picsum Photos</div>
+</footer>
+
+<script>
+const images = [
+  { id: 10,  title: "Golden Hour",       cat: "nature",       seed: 10  },
+  { id: 20,  title: "Urban Geometry",    cat: "architecture", seed: 20  },
+  { id: 30,  title: "Portrait Study I",  cat: "portrait",     seed: 30  },
+  { id: 40,  title: "Concrete Forms",    cat: "architecture", seed: 40  },
+  { id: 50,  title: "Coastal Mist",      cat: "nature",       seed: 50  },
+  { id: 60,  title: "Void & Form",       cat: "abstract",     seed: 60  },
+  { id: 70,  title: "Morning Walk",      cat: "street",       seed: 70  },
+  { id: 80,  title: "Portrait Study II", cat: "portrait",     seed: 80  },
+  { id: 90,  title: "Iron & Glass",      cat: "architecture", seed: 90  },
+  { id: 100, title: "Wild Bloom",        cat: "nature",       seed: 100 },
+  { id: 110, title: "Chromatic",         cat: "abstract",     seed: 110 },
+  { id: 120, title: "Night Market",      cat: "street",       seed: 120 },
+  { id: 130, title: "Light Study",       cat: "abstract",     seed: 130 },
+  { id: 140, title: "Old Quarter",       cat: "architecture", seed: 140 },
+  { id: 150, title: "Solitude",          cat: "portrait",     seed: 150 },
+  { id: 160, title: "River Delta",       cat: "nature",       seed: 160 },
+  { id: 170, title: "Intersection",      cat: "street",       seed: 170 },
+  { id: 180, title: "Texture No.1",      cat: "abstract",     seed: 180 },
+  { id: 190, title: "Brutalism",         cat: "architecture", seed: 190 },
+  { id: 200, title: "Forest Path",       cat: "nature",       seed: 200 },
+  { id: 210, title: "Candid",            cat: "portrait",     seed: 210 },
+  { id: 220, title: "Crossroads",        cat: "street",       seed: 220 },
+  { id: 230, title: "Dissolution",       cat: "abstract",     seed: 230 },
+  { id: 240, title: "The Tower",         cat: "architecture", seed: 240 },
+];
+
+const gallery = document.getElementById('gallery');
+const lightbox = document.getElementById('lightbox');
+const lbImg = document.getElementById('lb-img');
+const lbTitle = document.getElementById('lb-title');
+const lbSub = document.getElementById('lb-sub');
+const lbCur = document.getElementById('lb-cur');
+const lbTotal = document.getElementById('lb-total');
+const lbThumbs = document.getElementById('lb-thumbs');
+const visibleCount = document.getElementById('visible-count');
+
+let currentIndex = 0;
+let currentFilter = 'all';
+let currentFx = 'fx-none';
+let visibleImages = [...images];
+
+// Build gallery
+function buildGallery() {
+  gallery.innerHTML = '';
+  visibleImages = currentFilter === 'all'
+    ? [...images]
+    : images.filter(img => img.cat === currentFilter);
+
+  visibleCount.textContent = visibleImages.length;
+  lbTotal.textContent = visibleImages.length;
+
+  visibleImages.forEach((img, i) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item ' + currentFx;
+    item.style.animationDelay = (i * 0.04) + 's';
+
+    const src = `https://picsum.photos/seed/${img.seed}/600/800`;
+    const srcThumb = `https://picsum.photos/seed/${img.seed}/300/400`;
+
+    item.innerHTML = `
+      <img src="${srcThumb}" data-full="${src}" alt="${img.title}" loading="lazy" />
+      <div class="gallery-item-overlay">
+        <div class="gallery-item-icon">
+          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+        </div>
+        <div class="gallery-item-title">${img.title}</div>
+        <div class="gallery-item-cat">${img.cat}</div>
+      </div>
+    `;
+
+    item.addEventListener('click', () => openLightbox(i));
+    gallery.appendChild(item);
+  });
+
+  buildThumbs();
+}
+
+function buildThumbs() {
+  lbThumbs.innerHTML = '';
+  visibleImages.forEach((img, i) => {
+    const th = document.createElement('img');
+    th.className = 'lb-thumb';
+    th.src = `https://picsum.photos/seed/${img.seed}/100/100`;
+    th.alt = img.title;
+    th.addEventListener('click', () => {
+      currentIndex = i;
+      updateLightbox();
+    });
+    lbThumbs.appendChild(th);
+  });
+}
+
+function openLightbox(index) {
+  currentIndex = index;
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  updateLightbox();
+}
+
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function updateLightbox() {
+  const img = visibleImages[currentIndex];
+  if (!img) return;
+
+  lbImg.style.opacity = '0';
+  lbImg.style.transform = 'scale(0.97)';
+
+  const newSrc = `https://picsum.photos/seed/${img.seed}/1200/900`;
+  lbImg.src = newSrc;
+  lbImg.alt = img.title;
+
+  lbImg.onload = () => {
+    lbImg.style.transition = 'opacity 0.4s ease, transform 0.4s ease, filter var(--transition)';
+    lbImg.style.opacity = '1';
+    lbImg.style.transform = 'scale(1)';
+  };
+
+  lbTitle.textContent = img.title;
+  lbSub.textContent = img.cat + ' · No.' + (currentIndex + 1).toString().padStart(3, '0');
+  lbCur.textContent = currentIndex + 1;
+
+  // Apply current filter to lightbox image
+  const fxMap = {
+    'fx-none': 'none',
+    'fx-mono': 'grayscale(1) contrast(1.1)',
+    'fx-warm': 'sepia(0.4) saturate(1.3) brightness(1.05)',
+    'fx-cool': 'hue-rotate(180deg) saturate(0.8) brightness(0.95)',
+    'fx-fade': 'saturate(0.3) brightness(1.1) contrast(0.9)',
+    'fx-vivid': 'saturate(1.8) contrast(1.1)',
+    'fx-noir': 'grayscale(1) brightness(0.85) contrast(1.3)',
+    'fx-mist': 'brightness(1.1) saturate(0.6) contrast(0.85) hue-rotate(10deg)',
+  };
+  lbImg.style.filter = fxMap[currentFx] || 'none';
+
+  // Update thumbs active state
+  const thumbEls = lbThumbs.querySelectorAll('.lb-thumb');
+  thumbEls.forEach((th, i) => {
+    th.classList.toggle('active', i === currentIndex);
+  });
+
+  // Scroll active thumb into view
+  if (thumbEls[currentIndex]) {
+    thumbEls[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+}
+
+function goPrev() {
+  currentIndex = (currentIndex - 1 + visibleImages.length) % visibleImages.length;
+  updateLightbox();
+}
+
+function goNext() {
+  currentIndex = (currentIndex + 1) % visibleImages.length;
+  updateLightbox();
+}
+
+// Category filter
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.cat;
+    buildGallery();
+  });
+});
+
+// CSS image filters
+document.querySelectorAll('.fx-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fx-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const newFx = btn.dataset.fx;
+    // Remove old fx class from all items
+    document.querySelectorAll('.gallery-item').forEach(item => {
+      item.classList.remove(currentFx);
+      item.classList.add(newFx);
+    });
+    currentFx = newFx;
+
+    // Update lightbox img filter too
+    if (lightbox.classList.contains('open')) {
+      updateLightbox();
+    }
+  });
+});
+
+// Lightbox controls
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+document.getElementById('lb-prev').addEventListener('click', goPrev);
+document.getElementById('lb-next').addEventListener('click', goNext);
+
+lightbox.addEventListener('click', e => {
+  if (e.target === lightbox) closeLightbox();
+});
+
+document.addEventListener('keydown', e => {
+  if (!lightbox.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') goPrev();
+  if (e.key === 'ArrowRight') goNext();
+});
+
+// Touch swipe for lightbox
+let touchStartX = 0;
+lightbox.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+lightbox.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) dx < 0 ? goNext() : goPrev();
+});
+
+buildGallery();
+</script>
+</body>
+</html>
